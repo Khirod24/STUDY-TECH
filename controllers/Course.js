@@ -5,7 +5,6 @@ const Tag = require("../models/Tags");
 const {uploadImageToCloudinary} = require("../utils/imageUploader");
 
 //CREATE COURSE HANDLER FUNCTION
-
 exports.createCourse = async(req,res)=>{
     try{
         //DATA FETCH
@@ -82,8 +81,7 @@ exports.createCourse = async(req,res)=>{
 }
 
 //GET ALL COURSES HANDLER FUNCTION
-
-exports.showAllCourses = async(req,res)=>{
+exports.getAllCourses = async(req,res)=>{
     try{
         const allCourses = await Course.find({});
         res.status(200).json({
@@ -97,6 +95,45 @@ exports.showAllCourses = async(req,res)=>{
             success:false,
             message:"CANNOT FETCH COURSE DATA",
             error:e.message,
+        })
+    }
+}
+
+//GET COURSE DETAILS
+exports.getCourseDetails = async(req,res)=>{
+    try{
+        //GET ID
+        const {courseId} = req.body;
+        //FIND COURSE DETAILS
+        const courseDetails = await Couse.find({_id:courseId}).populate({
+            path:"instructor",
+            populate:{path:"additionalDetails"}
+        }).populate("category").populate("ratingAndreviews").populate({
+            path:"courseContent",
+            populate:{
+                path:"subSection"
+            }
+        }).exec();
+
+        //VALIDATION
+        if(!courseDetails){
+            return res.status(400).json({
+                success:false,
+                message:`COULD NOT FIND THE COURSE WITH ${courseId}`,
+            })
+        }
+
+        return res.status(200).json({
+            success:true,
+            message:"COURSE DETAILS FETCHED SUCCESSFULLY",
+            data:courseDetails,
+        })
+
+    }catch(e){
+        console.log(e);
+        return res.status(500).json({
+            success:false,
+            message:e.message
         })
     }
 }
